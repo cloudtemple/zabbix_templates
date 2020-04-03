@@ -169,7 +169,7 @@ Once the limit is reached Redis will close all the new connections sending an er
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>redis.config[&quot;{$REDIS.HOST}&quot;, &quot;{$REDIS&gt;AUTH}&quot;]</key>
+                        <key>redis.config[&quot;{$REDIS.HOST}&quot;, &quot;{$REDIS.AUTH}&quot;]</key>
                     </master_item>
                 </item>
                 <item>
