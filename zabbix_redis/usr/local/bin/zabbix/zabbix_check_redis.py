@@ -19,6 +19,9 @@ info = {}
 def compact_json(data):
     return json.dumps(data, separators=(',', ':'))
 
+def print_json(msg):
+    print(compact_json(msg))
+
 try:
     with redis.Redis(host=args.redis_host, port=args.redis_port, password=args.redis_pass) as client:
         if args.ping:
@@ -31,7 +34,7 @@ try:
         if args.info:
             for section in sections:
                 info[section] = client.info(section)
-            print(compact_json(info))
+            print_json(info)
 
         if args.slowlog:
             number = client.slowlog_len()
@@ -39,19 +42,19 @@ try:
 
         if args.config:
             config = client.config_get()
-            print(compact_json(config))
+            print_json(config)
 
 except redis.AuthenticationError as err:
     message = {'ZBX_NOTSUPPORTED': err}
-    print(compact_json(message))
+    print_json(message)
     sys.exit(1)
-except redis.ConnectionError:
+except redis.ConnectionError as err:
     message = {'ZBX_NOTSUPPORTED': err}
-    print(compact_json(message))
+    print_json(message)
     sys.exit(1)
-except redis.RedisError:
+except redis.RedisError as err:
     message = {'ZBX_NOTSUPPORTED': err}
-    print(compact_json(message))
+    print_json(message)
     sys.exit(1)
 
 sys.exit()
