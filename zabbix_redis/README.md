@@ -2,6 +2,8 @@ This is official zabbix template for zabbix 4.4 with minor changes. Set of scrip
 
 Requires python3. Tested with python-redis >= 3.4.1
 
+It can work either with tcp or unix sockets.
+
 Redis server side:
 * Copy files to corresponding directories. Restart agent
 
