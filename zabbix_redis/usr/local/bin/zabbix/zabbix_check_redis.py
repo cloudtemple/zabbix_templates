@@ -29,18 +29,18 @@ def print_json(msg):
 if args.unix:
     if os.path.exists(args.unix):
         pool = redis.ConnectionPool(connection_class=redis.UnixDomainSocketConnection,
-				    path=args.unix, 
+				    path=args.unix,
 				    password=args.redis_pass)
     else:
-        message = 'ZBX_NOTSUPPORTED: {} File Not Found'.format(args.unix)
+        message = {'ZBX_NOTSUPPORTED': '{} File Not Found'.format(args.unix)}
         print_json(message)
         sys.exit(1)
 else:
     pool = redis.ConnectionPool(host=args.redis_host, port=args.redis_port, password=args.redis_pass)
 
 
-try:
-    with redis.Redis(connection_pool=pool) as client:
+with redis.Redis(connection_pool=pool) as client:
+    try:
         if args.ping:
             ping = client.ping()
             if ping:
@@ -61,17 +61,17 @@ try:
             config = client.config_get()
             print_json(config)
 
-except redis.AuthenticationError as err:
-    message = {'ZBX_NOTSUPPORTED': err}
-    print_json(message)
-    sys.exit(1)
-except redis.ConnectionError as err:
-    message = {'ZBX_NOTSUPPORTED': err}
-    print_json(message)
-    sys.exit(1)
-except redis.RedisError as err:
-    message = {'ZBX_NOTSUPPORTED': err}
-    print_json(message)
-    sys.exit(1)
+    except redis.AuthenticationError as err:
+        message = {'ZBX_NOTSUPPORTED': str(err)}
+        print_json(message)
+        sys.exit(1)
+    except redis.ConnectionError as err:
+        message = {'ZBX_NOTSUPPORTED': str(err)}
+        print_json(message)
+        sys.exit(1)
+    except redis.RedisError as err:
+        message = {'ZBX_NOTSUPPORTED': str(err)}
+        print_json(message)
+        sys.exit(1)
 
 sys.exit()
