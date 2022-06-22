@@ -1,0 +1,204 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-06-21T16:02:23Z'
+  groups:
+    -
+      uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    -
+      uuid: 1a0fced783664e33a57ba32b524b7697
+      template: 'NVidia GPU Sensors'
+      name: 'NVidia GPU Sensors'
+      description: |
+        ## Overview
+        
+        Based on template by Richard Kavanagh
+        
+        This template integrates NVidia SMI for any number of graphic cards with Zabbix.
+        
+        The template adds monitoring of:
+        
+        * GPU Utilisation
+        * GPU Power Consumption
+        * GPU Memory (Used, Free, Total)
+        * GPU Temperature
+        * GPU Fan Speed
+        
+        The following agent parameters can be used to add the metrics into Zabbix:
+        
+        UserParameter=gpu.discovery,nvidia-smi -L | grep -Eo "GPU-[a-z0-9-]*" | sed 's/.*/{"{#GPUID}":"&"}/;1s/^/[/;$!s/$/,/;$s/$/]/' | tr -d '\n'
+        UserParameter=gpu.temp[*],nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits -i $1
+        UserParameter=gpu.memtotal[*],nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits -i $1
+        UserParameter=gpu.used[*],nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits -i $1
+        UserParameter=gpu.free[*],nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i $1
+        UserParameter=gpu.fanspeed[*],nvidia-smi --query-gpu=fan.speed --format=csv,noheader,nounits -i $1
+        UserParameter=gpu.utilisation[*],nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits -i $1
+        UserParameter=gpu.power[*],nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits -i $1
+        
+        ## Author
+        
+        Theodor Zurabishvili
+      groups:
+        -
+          name: Templates
+      discovery_rules:
+        -
+          uuid: 4e2301a439b24dc9a3daef7bb9059fdb
+          name: 'NVidia GPU Discovery'
+          type: ZABBIX_ACTIVE
+          key: gpu.discovery
+          delay: 1h
+          item_prototypes:
+            -
+              uuid: 86d8428b98d04c6a950ea0a18f5d6f5f
+              name: 'GPU {#GPUID}: Fan Speed'
+              type: ZABBIX_ACTIVE
+              key: 'gpu.fanspeed["{#GPUID}"]'
+              units: RPM
+              tags:
+                -
+                  tag: Application
+                  value: NVidia
+            -
+              uuid: 3239183853534206801bbe867fa60225
+              name: 'GPU {#GPUID}: Free Memory'
+              type: ZABBIX_ACTIVE
+              key: 'gpu.free["{#GPUID}"]'
+              units: B
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1048576'
+              tags:
+                -
+                  tag: Application
+                  value: NVidia
+            -
+              uuid: d36c730ca3bc4071a7fe75c6683b1789
+              name: 'GPU {#GPUID}: Total Memory'
+              type: ZABBIX_ACTIVE
+              key: 'gpu.memtotal["{#GPUID}"]'
+              units: B
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1048576'
+              tags:
+                -
+                  tag: Application
+                  value: NVidia
+            -
+              uuid: 5e0cbbca9797412f94ec9842aa5d5a42
+              name: 'GPU {#GPUID}: Power'
+              type: ZABBIX_ACTIVE
+              key: 'gpu.power["{#GPUID}"]'
+              value_type: FLOAT
+              units: W
+              tags:
+                -
+                  tag: Application
+                  value: NVidia
+            -
+              uuid: 26674e093d8b40229ca98d0e0d8ef7c7
+              name: 'GPU {#GPUID}: Temperature'
+              type: ZABBIX_ACTIVE
+              key: 'gpu.temp["{#GPUID}"]'
+              units: C
+              tags:
+                -
+                  tag: Application
+                  value: NVidia
+              trigger_prototypes:
+                -
+                  uuid: 3e0283a1cc3b4085abe5df6fec77e60e
+                  expression: 'last(/NVidia GPU Sensors/gpu.temp["{#GPUID}"],#2)>95'
+                  name: 'GPU {#GPUID}: Temperature over 95C'
+                  opdata: '{ITEM.LASTVALUE}'
+                  priority: AVERAGE
+            -
+              uuid: a0313f12bf77495ea9e9b5c6d40b64a7
+              name: 'GPU {#GPUID}: Used Memory'
+              type: ZABBIX_ACTIVE
+              key: 'gpu.used["{#GPUID}"]'
+              units: B
+              preprocessing:
+                -
+                  type: MULTIPLIER
+                  parameters:
+                    - '1048576'
+              tags:
+                -
+                  tag: Application
+                  value: NVidia
+            -
+              uuid: 86004b462fe249aa8295933bc109a190
+              name: 'GPU {#GPUID}: Utilisation'
+              type: ZABBIX_ACTIVE
+              key: 'gpu.utilisation["{#GPUID}"]'
+              value_type: FLOAT
+              units: '%'
+              tags:
+                -
+                  tag: Application
+                  value: NVidia
+          graph_prototypes:
+            -
+              uuid: 9aaeb2d4ff3441de9e94c28d7ec0bb60
+              name: 'GPU {#GPUID}: Memory'
+              graph_items:
+                -
+                  color: 00C800
+                  item:
+                    host: 'NVidia GPU Sensors'
+                    key: 'gpu.memtotal["{#GPUID}"]'
+                -
+                  sortorder: '1'
+                  color: C80000
+                  item:
+                    host: 'NVidia GPU Sensors'
+                    key: 'gpu.free["{#GPUID}"]'
+                -
+                  sortorder: '2'
+                  color: 0000C8
+                  item:
+                    host: 'NVidia GPU Sensors'
+                    key: 'gpu.used["{#GPUID}"]'
+            -
+              uuid: e958cadd050349ed95cb6b1804a08856
+              name: 'GPU {#GPUID}: Power'
+              graph_items:
+                -
+                  drawtype: FILLED_REGION
+                  color: C80000
+                  item:
+                    host: 'NVidia GPU Sensors'
+                    key: 'gpu.power["{#GPUID}"]'
+            -
+              uuid: 72bb7a6336974ca2a1230a3c8fc5c25d
+              name: 'GPU {#GPUID}: Temperature'
+              graph_items:
+                -
+                  drawtype: FILLED_REGION
+                  color: FF0000
+                  item:
+                    host: 'NVidia GPU Sensors'
+                    key: 'gpu.temp["{#GPUID}"]'
+                -
+                  sortorder: '1'
+                  color: 00FF00
+                  yaxisside: RIGHT
+                  item:
+                    host: 'NVidia GPU Sensors'
+                    key: 'gpu.fanspeed["{#GPUID}"]'
+            -
+              uuid: 16313be73f0046328677d964684a09a4
+              name: 'GPU {#GPUID}: Utilisation'
+              graph_items:
+                -
+                  color: F63100
+                  item:
+                    host: 'NVidia GPU Sensors'
+                    key: 'gpu.utilisation["{#GPUID}"]'
