@@ -19,7 +19,7 @@ zabbix_export:
         
         The template adds monitoring of:
         
-        * GPU Utilisation
+        * GPU Utilization
         * GPU Power Consumption
         * GPU Memory (Used, Free, Total)
         * GPU Temperature
@@ -33,7 +33,7 @@ zabbix_export:
         UserParameter=gpu.used[*],nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits -i $1
         UserParameter=gpu.free[*],nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i $1
         UserParameter=gpu.fanspeed[*],nvidia-smi --query-gpu=fan.speed --format=csv,noheader,nounits -i $1
-        UserParameter=gpu.utilisation[*],nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits -i $1
+        UserParameter=gpu.utilization[*],nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits -i $1
         UserParameter=gpu.power[*],nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits -i $1
         
         ## Author
@@ -114,8 +114,8 @@ zabbix_export:
               trigger_prototypes:
                 -
                   uuid: 3e0283a1cc3b4085abe5df6fec77e60e
-                  expression: 'last(/NVidia GPU Sensors/gpu.temp["{#GPUID}"],#2)>95'
-                  name: 'GPU {#GPUID}: Temperature over 95C'
+                  expression: 'last(/NVidia GPU Sensors/gpu.temp["{#GPUID}"],#2)>{$GPU.MAX.TEMP}'
+                  name: 'GPU {#GPUID}: Temperature over {$GPU.MAX.TEMP}C'
                   opdata: '{ITEM.LASTVALUE}'
                   priority: AVERAGE
             -
@@ -135,9 +135,9 @@ zabbix_export:
                   value: NVidia
             -
               uuid: 86004b462fe249aa8295933bc109a190
-              name: 'GPU {#GPUID}: Utilisation'
+              name: 'GPU {#GPUID}: Utilization'
               type: ZABBIX_ACTIVE
-              key: 'gpu.utilisation["{#GPUID}"]'
+              key: 'gpu.utilization["{#GPUID}"]'
               value_type: FLOAT
               units: '%'
               tags:
@@ -195,10 +195,14 @@ zabbix_export:
                     key: 'gpu.fanspeed["{#GPUID}"]'
             -
               uuid: 16313be73f0046328677d964684a09a4
-              name: 'GPU {#GPUID}: Utilisation'
+              name: 'GPU {#GPUID}: Utilization'
               graph_items:
                 -
                   color: F63100
                   item:
                     host: 'NVidia GPU Sensors'
-                    key: 'gpu.utilisation["{#GPUID}"]'
+                    key: 'gpu.utilization["{#GPUID}"]'
+      macros:
+        -
+          macro: '{$GPU.MAX.TEMP}'
+          value: '95'
